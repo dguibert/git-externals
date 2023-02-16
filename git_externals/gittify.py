@@ -421,8 +421,8 @@ def gittify(repo, config, checkout_branches=False, finalize=False):
 @cli.command('clone')
 @click.argument('root', metavar='SVNROOT')
 @click.argument('path', metavar='REPOPATH')
-@click.argument('authors-file', type=click.Path(exists=True, resolve_path=True),
-                metavar='USERMAP')
+@click.option('--authors-file', type=click.Path(exists=True, resolve_path=True),
+                default=None)
 @click.option('--same-level-branches', default=None)
 @click.option('--dry-run', is_flag=True)
 @click.pass_context
@@ -480,8 +480,8 @@ def clone(ctx, root, path, authors_file, same_level_branches, dry_run):
 @cli.command('fetch')
 @click.argument('root', metavar='SVNROOT')
 @click.argument('path', metavar='REPOPATH')
-@click.argument('authors-file', type=click.Path(exists=True, resolve_path=True),
-                metavar='USERMAP')
+@click.option('--authors-file', type=click.Path(exists=True, resolve_path=True),
+                default=None)
 @click.option('--dry-run', is_flag=True)
 @click.pass_context
 def fetch(ctx, root, path, authors_file, dry_run, git=git, checkout=checkout, check_call=check_call):
@@ -497,10 +497,16 @@ def fetch(ctx, root, path, authors_file, dry_run, git=git, checkout=checkout, ch
             def checkout(x):
                 echo('checkout', x)
                 yield
-        check_call(['git','svn', 'fetch', '--all', '-A', authors_file])
+        if authors_file is not None:
+            check_call(['git','svn', 'fetch', '--all', '-A', authors_file])
+        else:
+            check_call(['git','svn', 'fetch', '--all'])
         for branch in branches():
             with checkout(branch):
-                check_call(['git', 'svn', 'rebase', '-A', authors_file])
+                if authors_file is not None:
+                    check_call(['git', 'svn', 'rebase', '-A', authors_file])
+                else:
+                    check_call(['git', 'svn', 'rebase'])
 
 
 @cli.command('cleanup')
